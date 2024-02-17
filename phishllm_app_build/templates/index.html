@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=0.1">
+
+    <title>FreePhish URL Scanner</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"> <!-- Font Awesome CDN -->
+    <style>
+        .result {
+            margin-top: 20px;
+            font-weight: bold;
+            font-size: 18px;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .safe {
+            color: #28a745;
+        }
+        .phishing {
+            color: #dc3545;
+        }
+        .icon {
+            width: 24px;
+            height: 24px;
+        }
+        .scanner-title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .scanner-title img {
+            height: 3rem;
+            margin-right: 15px;
+        }
+        .navbar-text {
+            margin: auto;
+        }
+        
+        
+        .table-bordered th {
+    text-align: center; 
+    border: 1px solid #dee2e6;
+        }
+
+        .table-bordered td:not(.url-cell) {
+    text-align: center; 
+}
+
+        .url-cell {
+            text-align: left; 
+            max-width: 250px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+                .table-striped tbody tr:nth-of-type(odd) {
+            background-color: rgba(0,0,0,.03);
+        }
+        .url-cell {
+            max-width: 250px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .signup-prompt {
+            text-align: center;
+            margin-top: 20px;}
+        .spinner-border {
+            width: 24px;
+            height: 24px;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 10px;
+        }
+        #bar-container {
+            
+            width: 100%;
+            height: 30px; 
+            border: 1px solid #000;
+            position: relative;
+            background: linear-gradient(to right, green 20%, yellow 50%, red);
+            display: none; 
+            border-radius: 30px;
+        }
+
+        #indicator {
+
+            width: 4px;
+            height: 40px; 
+            position: absolute;
+            background-color: black;
+            top: -5px;
+            z-index: 10;
+        }
+
+        #label {
+            position: absolute;
+            top: -25px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            text-align: center;
+            font-weight: bold;
+            white-space: nowrap; 
+        }
+        
+
+    }
+
+ @media (max-width: 768px) { 
+    .navbar-custom {
+        flex-direction: column;
+        align-items: center;
+        margin-left: 20px;
+    }
+
+    .navbar-center {
+        flex-grow: 0; 
+        order: 1; 
+        text-align: center;
+        padding-bottom: 10px; 
+    }
+
+    .navbar-right {
+        order: 2; 
+        width: 100%;
+        justify-content: center; 
+        gap: 10px; 
+    }
+}
+
+        .navbar-custom {
+            display: flex;
+            justify-content: space-between; 
+            align-items: center;
+            padding-left:150px;
+        }
+
+        .navbar-center {
+            flex-grow: 1; 
+            text-align: center;
+        }
+
+        .navbar-right {
+            display: flex;
+            gap: 20px; 
+        }
+
+        
+        .fa-chrome { color: #FFC107; }
+        .fa-edge { color: #0078D7; }
+        .fa-brave { color: #FB542B; }
+        .fa-opera { color: #FF1B2D; }
+    </style>
+</head>
+<body>
+     <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container navbar-custom">
+            <div class="navbar-center">
+                <a href="https://github.com/UTA-SPRLab/freephish" class="navbar-text" target="_blank">
+                    Like FreePhish? Try our free Browser extension!
+                </a>
+                <i class="fa fa-chrome icon" aria-hidden="true"></i> <!-- Chrome Icon -->
+                <i class="fa fa-edge icon" aria-hidden="true"></i> <!-- Edge Icon -->
+                <i class="fa fa-opera icon" aria-hidden="true"></i> <!-- Opera Icon -->
+            </div>
+            <div class="navbar-right">
+                <a href="https://docs.google.com/forms/d/e/1FAIpQLSd47wyfhykDzwpEpSJWL3dudNqe-BR8fgvSZRNBwWK_GKMxCA/viewform" class="navbar-text" target="_blank">API</a> <!-- API Link -->
+                <a href="https://sayaksaharoy.com/#contact" class="navbar-text" target="_blank">Contact Us</a> <!-- Contact Us Link -->
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-7 text-center">
+                <div class="scanner-title mb-5">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" style="height: 5rem;">
+                    <h3 class="mb-0"><em>FreePhish URL Scanner</em></h3>
+                </div>
+                <div class="input-group mb-3">
+                    <input type="text" id="urlInput" class="form-control" placeholder="Enter the website URL">
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" type="button" onclick="scanURL()">Scan</button>
+                        <span id="loading" class="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true" style="display: none;"></span>
+                    </div>
+                </div>
+                <div id="result" class="result mt-4"></div>
+                
+                <div id="bar-container" class="mb-3">
+                    <div id="indicator">
+                        <div id="label"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+           <div class="table-responsive">
+            <h5 class="text-center">Recently Discovered URLs</h5>
+            <br>
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>URL</th>
+                        <th>Time Discovered</th>
+                        <th>IP Address</th> 
+                        <th>Risk</th> 
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in recent_urls[:10] %}
+                    <tr>
+                        <td class="url-cell">{{ entry.url }}</td>
+                        <td>{{ entry.age }}</td>
+                        <td>{{ entry.ip }}</td> 
+                        <td>{{ entry.confidence }}</td> <!-- Data for Confidence Score -->
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="signup-prompt">
+                <a href="https://docs.google.com/forms/d/e/1FAIpQLSd47wyfhykDzwpEpSJWL3dudNqe-BR8fgvSZRNBwWK_GKMxCA/viewform" target="_blank">Need access to the full FreePhish dataset? Sign up for our API</a>
+            </div>
+        </div>
+    </div>
+
+    <audio id="dangerSound" src="static/phishing.mp3"></audio>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script>
+    function scanURL() {
+        var url = document.getElementById('urlInput').value;
+        var resultElement = document.getElementById('result');
+        var barContainer = document.getElementById('bar-container');
+        url = url.trim().replace(/\s/g, '%20');
+        if(url) {
+            resultElement.innerHTML = '<span class="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span> Scanning URL, please wait...';
+            barContainer.style.display = 'none';
+            
+            fetch(`/web_request?url=${encodeURIComponent(url)}`)
+            .then(response => response.json())
+            .then(data => {
+                let status = data.result === 'phishing' ? 'Phishing' : 'Safe';
+                let className = data.result === 'phishing' ? 'phishing' : 'safe';
+                let icon = data.result === 'phishing' ? '❌' : '✅';
+                // Adjust the score for benign URLs
+                let score = (data.score !== null) ? (data.result === 'benign' ? 1 - data.score : data.score) : 0;
+                let scoreText = ` (Score: ${score.toFixed(2)})`; // Format the score to 2 decimal places
+                resultElement.innerHTML = `<span class="icon">${icon}</span> ${url} is ${status}`;
+                resultElement.className = 'result ' + className;
+                updateIndicator(score);
+
+                barContainer.style.display = 'block';
+                document.getElementById('urlInput').value = '';
+            })
+            .catch(error => {
+                resultElement.innerHTML = `Error: ${error}`;
+                resultElement.className = 'result';
+                barContainer.style.display = 'none';
+            });
+        } else {
+            resultElement.innerHTML = 'Please enter a URL.';
+            resultElement.className = 'result';
+            barContainer.style.display = 'none';
+        }
+    }
+
+    function updateIndicator(value) {
+        var indicator = document.getElementById('indicator');
+        var label = document.getElementById('label');
+        var containerWidth = document.getElementById('bar-container').offsetWidth;
+        var labelWidth = label.offsetWidth;
+
+        // Calculate the left position of the indicator
+        var leftPosition = value * containerWidth;
+
+        // Adjust the label position to prevent it from going inside the bar
+        if (leftPosition < labelWidth / 2) {
+            label.style.left = '0px';
+            label.style.marginLeft = '0px';
+        } else if (containerWidth - leftPosition < labelWidth / 2) {
+            label.style.left = '100%';
+            label.style.marginLeft = `-${labelWidth}px`;
+        } else {
+            label.style.left = `${value * 100}%`;
+            label.style.marginLeft = `-${labelWidth / 2}px`;
+        }
+
+        indicator.style.left = `${value * 100}%`;
+        label.innerText = getLabel(value);
+    }
+
+
+    function getLabel(value) {
+        if (value < 0.2) return 'Phishing Risk: None';
+        else if (value >= 0.2 && value < 0.5) return 'Phishing Risk: Low';
+        else if (value >= 0.5 && value < 0.8) return 'Phishing Risk: Medium';
+        else if (value >= 0.8 && value < 1.1) return 'Phishing Risk: High';
+        else return 'Phishing Risk: None';
+    }
+</script>
+</body>
+</html>
